@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'colors.dart';
 
 import 'myrecipes/my_recipes_list.dart';
@@ -17,7 +18,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   List<Widget> pageList = <Widget>[];
-  // TODO: Add index key
+  static const String prefSelectedIndexKey = 'selectedIndex';
 
   @override
   void initState() {
@@ -25,18 +26,31 @@ class _MainScreenState extends State<MainScreen> {
     pageList.add(const RecipeList());
     pageList.add(const MyRecipesList());
     pageList.add(const ShoppingList());
-    // TODO: Call getCurrentIndex
+    getCurrentIndex();
   }
 
-  // TODO: Add saveCurrentIndex
+  void saveCurrentIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt(prefSelectedIndexKey, _selectedIndex);
+  }
 
-  // TODO: Add getCurrentIndex
+  void getCurrentIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey(prefSelectedIndexKey)) {
+      setState(() {
+        final index = prefs.getInt(prefSelectedIndexKey);
+        if (index != null) {
+          _selectedIndex = index;
+        }
+      });
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-    // TODO: Call saveCurrentIndex
+    saveCurrentIndex();
   }
 
   @override
@@ -61,17 +75,23 @@ class _MainScreenState extends State<MainScreen> {
         items: [
           BottomNavigationBarItem(
               icon: SvgPicture.asset('assets/images/icon_recipe.svg',
-                  colorFilter: ColorFilter.mode(_selectedIndex == 0 ? green : Colors.grey, BlendMode.srcIn),
+                  colorFilter: ColorFilter.mode(
+                      _selectedIndex == 0 ? green : Colors.grey,
+                      BlendMode.srcIn),
                   semanticsLabel: 'Recipes'),
               label: 'Recipes'),
           BottomNavigationBarItem(
               icon: SvgPicture.asset('assets/images/icon_bookmarks.svg',
-                  colorFilter: ColorFilter.mode(_selectedIndex == 1 ? green : Colors.grey, BlendMode.srcIn),
+                  colorFilter: ColorFilter.mode(
+                      _selectedIndex == 1 ? green : Colors.grey,
+                      BlendMode.srcIn),
                   semanticsLabel: 'Bookmarks'),
               label: 'Bookmarks'),
           BottomNavigationBarItem(
               icon: SvgPicture.asset('assets/images/icon_shopping_list.svg',
-                  colorFilter: ColorFilter.mode(_selectedIndex == 2 ? green : Colors.grey, BlendMode.srcIn),
+                  colorFilter: ColorFilter.mode(
+                      _selectedIndex == 2 ? green : Colors.grey,
+                      BlendMode.srcIn),
                   semanticsLabel: 'Groceries'),
               label: 'Groceries'),
         ],
