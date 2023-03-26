@@ -9,6 +9,9 @@ import 'dart:convert';
 import '../../network/recipe_model.dart';
 import '../recipe_card.dart';
 import 'recipe_details.dart';
+import 'package:chopper/chopper.dart';
+import 'dart:collection';
+import '../../network/model_response.dart';
 
 class RecipeList extends StatefulWidget {
   const RecipeList({Key? key}) : super(key: key);
@@ -36,7 +39,8 @@ class _RecipeListState extends State<RecipeList> {
     super.initState();
     searchTextController = TextEditingController(text: '');
     _scrollController.addListener(() {
-      final triggerFetchMoreSize = 0.7 * _scrollController.position.maxScrollExtent;
+      final triggerFetchMoreSize =
+          0.7 * _scrollController.position.maxScrollExtent;
       if (_scrollController.position.pixels > triggerFetchMoreSize) {
         if (hasMore &&
             currentEndPosition < currentCount &&
@@ -182,9 +186,11 @@ class _RecipeListState extends State<RecipeList> {
     if (searchTextController.text.length < 3) {
       return Container();
     }
-    return FutureBuilder<APIRecipeQuery>(
-      future: getRecipeData(searchTextController.text.trim(),
-          currentStartPosition, currentEndPosition),
+    return FutureBuilder<Response<Result<APIRecipeQuery>>>(
+      future: RecipeService.create().queryRecipes(
+          searchTextController.text.trim(),
+          currentStartPosition,
+          currentEndPosition),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasError) {
@@ -195,13 +201,33 @@ class _RecipeListState extends State<RecipeList> {
           }
 
           loading = false;
-          final query = snapshot.data;
+          if (false == snapshot.data?.isSuccessful) {
+            var errorMessage = 'Problems getting data';
+            if (snapshot.data?.error != null &&
+                snapshot.data?.error is LinkedHashMap) {
+              final map = snapshot.data?.error as LinkedHashMap;
+              errorMessage = map['message'];
+            }
+            return Center(
+              child: Text(
+                errorMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18.0),
+              ),
+            );
+          }
+          final result = snapshot.data?.body;
+          if (result == null || result is Error) {
+            // Hit an error
+            inErrorState = true;
+            return _buildRecipeList(context, currentSearchList);
+          }
+          final query = (result as Success).value;
           inErrorState = false;
           if (query != null) {
             currentCount = query.count;
             hasMore = query.more;
             currentSearchList.addAll(query.hits);
-            // 8
             if (query.to < currentEndPosition) {
               currentEndPosition = query.to;
             }
@@ -231,15 +257,8 @@ class _RecipeListState extends State<RecipeList> {
           },
         ));
       },
-      // 2
       child: recipeCard(recipe),
     );
-  }
-
-  Future<APIRecipeQuery> getRecipeData(String query, int from, int to) async {
-    final recipeJson = await RecipeService().getRecipes(query, from, to);
-    final recipeMap = json.decode(recipeJson);
-    return APIRecipeQuery.fromJson(recipeMap);
   }
 
   Widget _buildRecipeList(BuildContext recipeListContext, List<APIHits> hits) {
