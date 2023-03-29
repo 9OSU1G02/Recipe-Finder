@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.u9OSU1G02.recipe_finder">
    <application
-        android:label="recipe_finder"
+        android:label="Recipe 🔎"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
