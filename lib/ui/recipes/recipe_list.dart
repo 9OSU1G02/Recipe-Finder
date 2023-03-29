@@ -248,7 +248,6 @@ class _RecipeListState extends State<RecipeList> {
 
   Widget _buildRecipeCard(
       BuildContext topLevelContext, List<APIHits> hits, int index) {
-    // 1
     final recipe = hits[index].recipe;
     return GestureDetector(
       onTap: () {

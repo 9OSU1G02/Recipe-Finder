@@ -1,5 +1,4 @@
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlbrite/sqlbrite.dart';
 import 'package:synchronized/synchronized.dart';
@@ -21,7 +20,6 @@ class DatabaseHelper {
   static Database? _database;
 
   Future _onCreate(Database db, int version) async {
-    // 2
     await db.execute('''
         CREATE TABLE $recipeTable (
           $recipeId INTEGER PRIMARY KEY,
@@ -33,7 +31,7 @@ class DatabaseHelper {
           totalTime REAL
         )
         ''');
-    // 3
+
     await db.execute('''
         CREATE TABLE $ingredientTable (
           $ingredientId INTEGER PRIMARY KEY,
@@ -69,21 +67,19 @@ class DatabaseHelper {
 
   List<Recipe> parseRecipes(List<Map<String, dynamic>> recipeList) {
     final recipes = <Recipe>[];
-    // 1
+
     for (final recipeMap in recipeList) {
-      // 2
       final recipe = Recipe.fromJson(recipeMap);
-      // 3
+
       recipes.add(recipe);
     }
-    // 4
+
     return recipes;
   }
 
   List<Ingredient> parseIngredients(List<Map<String, dynamic>> ingredientList) {
     final ingredients = <Ingredient>[];
     for (final ingredientMap in ingredientList) {
-      // 5
       final ingredient = Ingredient.fromJson(ingredientMap);
       ingredients.add(ingredient);
     }
@@ -103,6 +99,7 @@ class DatabaseHelper {
       return Ingredient.fromJson(row);
     });
   }
+
   Future<List<Recipe>> findAllRecipes() async {
     final db = await instance.streamDatabase;
     final ingredientList = await db.query(recipeTable);
@@ -139,7 +136,7 @@ class DatabaseHelper {
 
   Future<int> insert(String table, Map<String, dynamic> row) async {
     final db = await instance.streamDatabase;
-    // 2
+
     return db.insert(
       table,
       row,
@@ -147,7 +144,6 @@ class DatabaseHelper {
   }
 
   Future<int> insertRecipe(Recipe recipe) {
-    // 3
     return insert(
       recipeTable,
       recipe.toJson(),
@@ -155,7 +151,6 @@ class DatabaseHelper {
   }
 
   Future<int> insertIngredient(Ingredient ingredient) {
-    // 4
     return insert(
       ingredientTable,
       ingredient.toJson(),
@@ -164,7 +159,7 @@ class DatabaseHelper {
 
   Future<int> _delete(String table, String columnId, int id) async {
     final db = await instance.streamDatabase;
-    // 2
+
     return db.delete(
       table,
       where: '$columnId = ?',
@@ -173,7 +168,6 @@ class DatabaseHelper {
   }
 
   Future<int> deleteRecipe(Recipe recipe) async {
-    // 3
     if (recipe.id != null) {
       return _delete(
         recipeTable,
@@ -198,7 +192,6 @@ class DatabaseHelper {
   }
 
   Future<void> deleteIngredients(List<Ingredient> ingredients) {
-    // 4
     for (final ingredient in ingredients) {
       if (ingredient.id != null) {
         _delete(
@@ -213,7 +206,7 @@ class DatabaseHelper {
 
   Future<int> deleteRecipeIngredients(int id) async {
     final db = await instance.streamDatabase;
-    // 5
+
     return db.delete(
       ingredientTable,
       where: '$recipeId = ?',

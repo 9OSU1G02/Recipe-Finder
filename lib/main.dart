@@ -4,16 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
 import 'package:provider/provider.dart';
+import 'package:recipe_finder/data/drift/drift_repository.dart';
 import 'package:recipe_finder/data/repository.dart';
-import 'package:recipe_finder/data/sqlite/sqlite_repository.dart';
 import 'package:recipe_finder/network/recipe_service.dart';
 import 'package:recipe_finder/network/service_interface.dart';
 import 'ui/main_screen.dart';
-
 Future<void> main() async {
   _setupLogging();
   WidgetsFlutterBinding.ensureInitialized();
-  final repository = SqliteRepository();
+  final repository = DriftRepository();
   await repository.init();
   runApp(MyApp(
     repository: repository,
